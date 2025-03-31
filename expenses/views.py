@@ -13,7 +13,7 @@ from datetime import datetime
 from django.contrib.auth.models import Group
 from .aws_utils.s3_utils import upload_to_s3
 from .aws_utils.sns_utils import send_sns_alert
-from .aws_utils.cloudwatch_utils import log_to_cloudwatch
+#from .aws_utils.cloudwatch_utils import log_to_cloudwatch
 from django.conf import settings
 from django.contrib import messages
 
@@ -90,7 +90,7 @@ def add_expense(request):
                     subject="High Expense Alert"
                 )
 
-            log_to_cloudwatch(f"[EXPENSE CREATED] ₹{expense.amount} - {expense.category} by {request.user.username}")
+            #log_to_cloudwatch(f"[EXPENSE CREATED] ₹{expense.amount} - {expense.category} by {request.user.username}")
             messages.success(request, 'Expense added successfully!')
             return redirect('expenses:expense_list')
         else:
@@ -129,7 +129,7 @@ def update_expense(request, expense_id):
                     subject="Updated Expense Alert"
                 )
 
-            log_to_cloudwatch(f"[EXPENSE UPDATED] ₹{updated_expense.amount} - {updated_expense.category} by {request.user.username}")
+            #log_to_cloudwatch(f"[EXPENSE UPDATED] ₹{updated_expense.amount} - {updated_expense.category} by {request.user.username}")
             messages.success(request, "Expense updated successfully!")
             return redirect('expenses:expense_list')
         else:
@@ -155,7 +155,7 @@ def delete_expense(request, expense_id):
         #expense.is_active = False  # Soft delete
         expense.delete()
 
-        log_to_cloudwatch(f"[EXPENSE DELETED] ₹{amount} - {title} by {request.user.username}")
+        #log_to_cloudwatch(f"[EXPENSE DELETED] ₹{amount} - {title} by {request.user.username}")
         messages.success(request, "Expense deleted successfully.")
         return redirect('expenses:expense_list')
 
