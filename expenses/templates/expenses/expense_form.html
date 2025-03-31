@@ -1,0 +1,143 @@
+{% extends 'expenses/base.html' %}
+{% block content %}
+<div class="container">
+    <h2>{% if expense %}Edit Expense{% else %}Add Expense{% endif %}</h2>
+    <form method="post" enctype="multipart/form-data" onsubmit="return validateExpenseForm()">
+        {% csrf_token %}
+
+        <!-- Title -->
+        <div class="mb-3">
+            <label class="form-label" for="title">Title</label>
+            <input type="text" class="form-control" id="title" name="title" placeholder="Enter title" 
+                   required pattern="^[A-Za-z0-9 ]{3,30}$" 
+                   title="Title must be 3-30 characters long and contain only letters, numbers, and spaces." 
+                   value="{{ form.title.value|default_if_none:'' }}" 
+                   oninput="validateField(this)">
+            <small class="text-danger" id="titleError"></small>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+            <label class="form-label" for="description">Description</label>
+            <textarea name="description" id="description" class="form-control" rows="3" 
+                      placeholder="Optional description...">{{ form.description.value|default_if_none:'' }}</textarea>
+        </div>
+
+        <!-- Amount -->
+        <div class="mb-3">
+            <label class="form-label" for="amount">Amount</label>
+            <input type="number" name="amount" id="amount" class="form-control" required min="1" step="0.01"
+                   pattern="^\d+(\.\d{1,2})?$" 
+                   title="Amount must be greater than 0 with up to 2 decimal places." 
+                   value="{{ form.amount.value|default_if_none:'' }}" 
+                   oninput="validateAmount()">
+            <small class="text-danger" id="amountError"></small>
+        </div>
+
+        <!-- Category -->
+        <div class="mb-3">
+            <label class="form-label" for="category">Category</label>
+            {{ form.category }}
+        </div>
+
+        <!-- Payment Method -->
+        <div class="mb-3">
+            <label class="form-label" for="payment_method">Payment Method</label>
+            {{ form.payment_method }}
+        </div>
+
+        <!-- Date -->
+        <div class="mb-3">
+            <label class="form-label" for="date">Date</label>
+            <input type="date" name="date" id="date" class="form-control" required 
+                   title="Date cannot be in the future." 
+                   value="{{ form.date.value|default_if_none:'' }}" 
+                   oninput="validateDate()">
+            <small class="text-danger" id="dateError"></small>
+        </div>
+
+        <!-- Receipt -->
+        <div class="mb-3">
+            <label class="form-label">Receipt</label>
+            {{ form.receipt }}
+            {% if expense and expense.receipt_url %}
+                <div class="mt-2">
+                    <a href="{{ expense.receipt_url }}" target="_blank">View Uploaded Receipt</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recurring -->
+        <div class="mb-3">
+            <label class="form-label">Recurring Expense</label>
+            <div class="form-check">
+                <input type="checkbox" name="is_recurring" class="form-check-input" id="is_recurring" 
+                       {% if form.is_recurring.value %}checked{% endif %}>
+                <label class="form-check-label" for="is_recurring">Yes</label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+        <a href="{% url 'expenses:expense_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+<!-- JS VALIDATION -->
+<script>
+    function validateField(input) {
+        let errorElement = document.getElementById(input.id + "Error");
+        if (!input.checkValidity()) {
+            errorElement.innerText = input.title;
+        } else {
+            errorElement.innerText = "";
+        }
+    }
+
+    function validateAmount() {
+        let input = document.getElementById("amount");
+        let errorElement = document.getElementById("amountError");
+        let pattern = /^\d+(\.\d{1,2})?$/;
+        if (input.value <= 0 || !pattern.test(input.value)) {
+            errorElement.innerText = "Amount must be a positive number with up to 2 decimal places.";
+            input.setCustomValidity("Invalid amount");
+        } else {
+            errorElement.innerText = "";
+            input.setCustomValidity("");
+        }
+    }
+
+    function validateDate() {
+        let input = document.getElementById("date");
+        let errorElement = document.getElementById("dateError");
+        let selectedDate = new Date(input.value);
+        let today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (selectedDate > today) {
+            errorElement.innerText = "Date cannot be in the future.";
+            input.setCustomValidity("Invalid future date");
+        } else {
+            errorElement.innerText = "";
+            input.setCustomValidity("");
+        }
+    }
+
+    function validateExpenseForm() {
+        let isValid = true;
+        const inputs = ["title", "amount", "date"];
+
+        inputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (!input.checkValidity()) {
+                validateField(input);
+                isValid = false;
+            }
+        });
+
+        validateAmount();
+        validateDate();
+
+        return isValid;
+    }
+</script>
+{% endblock %}

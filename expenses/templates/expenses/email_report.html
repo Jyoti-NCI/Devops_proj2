@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expense Report</title>
+</head>
+<body>
+    <h2>Hello {{ user.username }},</h2>
+    <p>Here is your latest expense report:</p>
+    <ul>
+        {% for expense in expenses %}
+        <li>{{ expense.date }} - {{ expense.title }}: ${{ expense.amount }} ({{ expense.category }})</li>
+        {% endfor %}
+    </ul>
+    <p>The attached PDF contains a detailed breakdown.</p>
+</body>
+</html>
