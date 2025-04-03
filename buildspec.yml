@@ -1,17 +1,18 @@
 version: 0.2
+ 
 phases:
-    install:
-        runtime-versions:
-            python: 3.9
-        commands:
-            - pip install --upgrade pip
-            # Install dependencies needed for running the static analysis
-            - pip install -r requirements.txt pylint
-    pre_build:
-        commands:
-            - python --version
-            - pylint --exit-zero $CODEBUILD_SRC_DIR/*.py
-            - pylint --exit-zero $CODEBUILD_SRC_DIR/emp_payroll/*.py
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - pip install --upgrade pip
+      - pip install -r requirements.txt pylint
+ 
+  pre_build:
+    commands:
+      - python --version
+      - pylint $(find $CODEBUILD_SRC_DIR -name "*.py") --fail-under=6 || true  # Allow lower score
+ 
 artifacts:
-    files:
-        - '**/*'
+  files:
+    - '**/*'

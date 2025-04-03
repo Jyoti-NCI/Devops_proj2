@@ -1,17 +1,50 @@
 version: 0.2
-
+ 
+env:
+  secrets-manager:
+    LOGIN: expensewithme:LOGIN
+    HOST: expensewithme:HOST
+    Organization: expensewithme:Organization
+    Project: expensewithme:Project
+ 
 phases:
   install:
     runtime-versions:
+      python: 3.11
       java: corretto17
     commands:
-      - echo "Installing SonarScanner..."
+      - yum update -y
+      - yum install -y jq unzip
+      - python -m venv venv
+      - source venv/bin/activate
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
       - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
       - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
-      - export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
-
+      - chmod +x sonar-scanner-5.0.1.3006-linux/bin/*
+      - export PATH=$PATH:$PWD/sonar-scanner-5.0.1.3006-linux/bin
+ 
+  pre_build:
+    commands:
+      - python --version
+      - java -version
+      - sonar-scanner --version
+ 
   build:
     commands:
-      - cd Devops_proj
-      - echo "Running SonarScanner analysis..."
-      - sonar-scanner -X -Dsonar.projectKey=Jyoti-NCI_Devops_proj -Dsonar.organization=jyoti-nci -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=ba5691a99c3c04411596e027811534411d7c1170 -Dsonar.sources=. -Dsonar.exclusions=**/settings.py -Dsonar.ci.activated=true -Dsonar.ci.automaticAnalysis.disabled=true -Dsonar.scm.disabled=true
+      - echo "Waiting for SonarCloud automatic analysis to complete..."
+      - sleep 10  # Adjust based on expected time for analysis completion
+      - echo "Checking Quality Gate status..."
+      - curl -u "$LOGIN:" "$HOST/api/qualitygates/project_status?projectKey=$Project" > result.json
+      - cat result.json
+      - |
+        if [ "$(jq -r '.projectStatus.status' result.json)" = "ERROR" ]; then
+          echo "❌ Quality Gate failed"
+          exit 1
+        else
+          echo "✅ Quality Gate passed"
+        fi
+ 
+artifacts:
+  files:
+    - '**/*'
